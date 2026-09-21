@@ -1,0 +1,8 @@
+# Versões usadas no desenvolvimento: streamlit 1.57.0, pandas 2.3.2,
+# plotly 6.7.0, requests 2.34.2.
+# streamlit >= 1.46 é obrigatório: o app usa width='stretch',
+# st.metric(border=...) e st.context.theme.
+streamlit>=1.46
+pandas>=2.0
+plotly>=5.18
+requests>=2.31
