@@ -22,10 +22,8 @@ listar as 100 maiores moedas nos seletores e mostrar o contexto de mercado.
 - [Instalação](#instalação)
 - [Execução local](#execução-local)
 - [Deploy no Streamlit Community Cloud](#deploy-no-streamlit-community-cloud)
-- [Chave de API (opcional, mas recomendada)](#chave-de-api-opcional-mas-recomendada)
 - [Estrutura do projeto](#estrutura-do-projeto)
 - [Como as métricas são calculadas](#como-as-métricas-são-calculadas)
-- [Decisões de visualização](#decisões-de-visualização)
 - [Cache e limites da API](#cache-e-limites-da-api)
 - [Solução de problemas](#solução-de-problemas)
 - [Aviso](#aviso)
@@ -75,7 +73,7 @@ anualizada e capitalização de mercado com sua variação.
 
 ## Instalação
 
-Requisitos: **Python 3.9 ou superior** (testado em 3.13).
+Requisitos: **Python 3.13 ou superior** (testado em 3.13).
 
 ```bash
 python -m venv .venv
@@ -110,73 +108,6 @@ streamlit run dashboard.py
 ```
 
 O navegador abre em `http://localhost:8501`.
-
-Para expor na rede local ou em outra porta:
-
-```bash
-streamlit run dashboard.py --server.port 8502 --server.address 0.0.0.0
-```
-
----
-
-## Deploy no Streamlit Community Cloud
-
-1. Acesse [share.streamlit.io](https://share.streamlit.io) e entre com a conta do
-   GitHub que hospeda este repositório.
-2. Clique em **Create app** → **Deploy a public app from GitHub**.
-3. Preencha:
-   - **Repository:** `<seu-usuário>/crypto-dashboard-streamlit`
-   - **Branch:** `main`
-   - **Main file path:** `dashboard.py`
-4. Opcional, em **Advanced settings** → **Secrets**, cole a chave da API no mesmo
-   formato do arquivo de exemplo:
-
-   ```toml
-   COINGECKO_API_KEY = "CG-sua-chave-aqui"
-   ```
-
-   Sem isso o painel funciona, mas fica sujeito ao limite público da CoinGecko —
-   e um app publicado, acessado por várias pessoas, atinge esse limite bem mais
-   rápido que o uso local.
-5. **Deploy**. A primeira construção instala o `requirements.txt` e leva alguns
-   minutos; depois cada `git push` na branch `main` republica o app
-   automaticamente.
-
-Para ajustar segredos depois, use **Manage app** → **Settings** → **Secrets**: a
-alteração reinicia o app sozinha, sem novo commit.
-
----
-
-## Chave de API (opcional, mas recomendada)
-
-A API pública da CoinGecko permite poucas requisições por minuto e responde com
-**HTTP 429** quando o limite é atingido. Uma chave gratuita do plano *Demo*
-([coingecko.com/en/api/pricing](https://www.coingecko.com/en/api/pricing))
-eleva esse limite.
-
-O dashboard lê a chave de duas fontes, nesta ordem:
-
-1. `.streamlit/secrets.toml`:
-
-   ```toml
-   COINGECKO_API_KEY = "CG-sua-chave-aqui"
-   ```
-
-2. Variável de ambiente:
-
-   ```bash
-   # Windows PowerShell
-   $env:COINGECKO_API_KEY = "CG-sua-chave-aqui"
-   # Linux / macOS
-   export COINGECKO_API_KEY="CG-sua-chave-aqui"
-   ```
-
-Quando há chave, ela é enviada no cabeçalho `x-cg-demo-api-key` e a barra
-lateral exibe "chave Demo ativa". Sem chave o painel continua funcionando, apenas
-com o limite público.
-
-> `secrets.toml` já está no `.gitignore` deste repositório. Use
-> `.streamlit/secrets.toml.example` como modelo e nunca versione a chave.
 
 ---
 
@@ -250,29 +181,6 @@ uma corretora.
 
 ---
 
-## Decisões de visualização
-
-Escolhas deliberadas, caso você venha a estender o painel:
-
-- **Uma medida por gráfico.** O gráfico principal mostra apenas o preço; a
-  capitalização tem gráfico próprio e o volume aparece nos indicadores e na
-  tabela de dados brutos. Empilhar duas escalas no mesmo eixo vertical sugeriria
-  uma correlação que o alinhamento arbitrário das escalas inventa.
-- **Sem legenda para uma série só.** Onde há uma única medida, o título a nomeia
-  e a caixa de legenda seria ruído.
-- **Comparação normalizada.** Moedas de preços muito diferentes só são
-  comparáveis em um eixo único quando indexadas a uma base comum — daí a base
-  100.
-- **Cor por identidade, em ordem fixa.** Cada série recebe a cor da sua posição,
-  e o limite de 8 moedas existe porque acima disso as cores deixam de ser
-  distinguíveis. Verde e vermelho aparecem apenas onde significam alta e baixa.
-- **Escala divergente na correlação.** Dois polos opostos com cinza neutro no
-  meio, e o valor numérico impresso em cada célula.
-- **Grade discreta.** Linhas finas, sem tracejado, e rótulos diretos apenas onde
-  ajudam — nunca um número sobre cada ponto.
-
----
-
 ## Cache e limites da API
 
 - Cada consulta fica em cache por **10 minutos** (`ttl=600`).
@@ -288,11 +196,10 @@ Escolhas deliberadas, caso você venha a estender o painel:
 
 | Sintoma | Causa provável | Solução |
 |---|---|---|
-| "limite de requisições da API gratuita atingido (HTTP 429)" | Consultas demais em pouco tempo | Aguarde cerca de um minuto ou configure `COINGECKO_API_KEY` |
+| "limite de requisições da API gratuita atingido (HTTP 429)" | Consultas demais em pouco tempo | Aguarde cerca de um minuto e atualize a página |
 | "Lista de moedas indisponível" na barra lateral | `/coins/markets` falhou | O painel segue com o catálogo local de 8 moedas; tente atualizar depois |
 | "falha de conexão" | Sem internet ou proxy bloqueando | Verifique a rede e o acesso a `api.coingecko.com` |
 | "O período é curto demais para calcular a correlação diária" | Menos de três dias na janela | Selecione 7 dias ou mais |
-| Horários fora do seu relógio | `FUSO_EXIBICAO` aponta para outro fuso | Ajuste `FUSO_EXIBICAO` e `ROTULO_FUSO` no topo de `dashboard.py` |
 | `AttributeError` em `width` ou `border` | Streamlit anterior à 1.46 | `pip install --upgrade streamlit` |
 
 ---
